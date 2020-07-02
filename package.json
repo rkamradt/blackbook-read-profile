@@ -1,0 +1,33 @@
+{
+  "name": "blackbook-read-profile",
+  "version": "0.0.1",
+  "description": "A read service for Blackbook",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rkamradt/blackbook-read-profile.git"
+  },
+  "author": "Randal L Kamradt Sr",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rkamradt/blackbook-read-profile/issues"
+  },
+  "homepage": "https://github.com/rkamradt/blackbook-read-profile#readme",
+  "dependencies": {
+    "@okta/oidc-middleware": "^2.0.0",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-session": "^1.16.2",
+    "http": "0.0.1-security",
+    "http-errors": "^1.8.0",
+    "morgan": "^1.10.0",
+    "njwt": "^1.0.0",
+    "nnode": "^0.3.3"
+  }
+}
