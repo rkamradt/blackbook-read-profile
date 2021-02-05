@@ -1,0 +1,2 @@
+docker build --tag rlkamradt/blackbook-read-profile .
+docker push rlkamradt/blackbook-read-profile
