@@ -1,6 +1,7 @@
 import express from 'express'
 const MongoClient = require('mongodb').MongoClient
 import cors from 'cors'
+
 // JWT validation is handled by the api-gateway (Cloudflare tunnel).
 // The gateway sets X-User-ID to the token subject before forwarding.
 function authenticationRequired(req, res, next) {
@@ -19,43 +20,51 @@ const MONGO_SERVER = process.env.MONGO_SERVER || 'mongodb-0'
 const MONGO_PORT = process.env.MONGO_PORT || 27017
 
 const dbName = 'blackbook'
-const mongourl = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_SERVER}:${MONGO_PORT}`;
+const mongourl = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_SERVER}:${MONGO_PORT}`
 
-async function getUser(req, res, next) {
+async function withDb(fn) {
   const client = new MongoClient(mongourl)
-
   try {
-    const email = req.userId
-    if(!email) {
-      console.log('no user in request')
-      return next()
-    }
-    console.log(`Connecting to ${mongourl}`)
     await client.connect()
-    console.log('Connected correctly to server')
+    return await fn(client.db(dbName))
+  } finally {
+    await client.close()
+  }
+}
 
-    const db = client.db(dbName)
-    const query = { user: email };
-    var user = await db.collection('users').findOne(query);
-    if(!user) {
-      user = {
-        user: email,
-        firstName: '',
-        lastName: '',
-        privateData: 'sample private data'
+async function getUser(req, res) {
+  try {
+    const user = await withDb(async (db) => {
+      const query = { user: req.userId }
+      let found = await db.collection('users').findOne(query)
+      if (!found) {
+        found = { user: req.userId, firstName: '', lastName: '', bio: '', avatarUrl: '' }
+        await db.collection('users').insertOne(found)
       }
-      await db.collection('users').insertOne(user)
-    }
-
+      return found
+    })
     res.json(user)
   } catch (err) {
-    client.close()
-    console.log(err.stack)
+    console.error(err.stack)
+    res.status(500).send('Internal Server Error')
   }
+}
 
-  console.log('Closing mongoDB connection')
-  client.close()
-  console.log('Ending')
+async function updateUser(req, res) {
+  try {
+    const { firstName, lastName, bio, avatarUrl } = req.body
+    const updated = await withDb(async (db) => {
+      return db.collection('users').findOneAndUpdate(
+        { user: req.userId },
+        { $set: { firstName, lastName, bio, avatarUrl } },
+        { upsert: true, returnDocument: 'after' }
+      )
+    })
+    res.json(updated)
+  } catch (err) {
+    console.error(err.stack)
+    res.status(500).send('Internal Server Error')
+  }
 }
 
 var app = express()
@@ -65,6 +74,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 app.get('/users', authenticationRequired, getUser)
+app.put('/users', authenticationRequired, updateUser)
 
 const { PORT = 3000 } = process.env
 
