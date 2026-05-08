@@ -1,5 +1,4 @@
 import express from 'express'
-import bodyParser from 'body-parser'
 const MongoClient = require('mongodb').MongoClient
 import cors from 'cors'
 // JWT validation is handled by the api-gateway (Cloudflare tunnel).
@@ -22,14 +21,8 @@ const MONGO_PORT = process.env.MONGO_PORT || 27017
 const dbName = 'blackbook'
 const mongourl = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_SERVER}:${MONGO_PORT}`;
 
-const client = new MongoClient(mongourl, {
-  useUnifiedTopology: true
-})
-
 async function getUser(req, res, next) {
-  const client = new MongoClient(mongourl, {
-    useUnifiedTopology: true
-  })
+  const client = new MongoClient(mongourl)
 
   try {
     const email = req.userId
@@ -51,13 +44,7 @@ async function getUser(req, res, next) {
         lastName: '',
         privateData: 'sample private data'
       }
-      const r = await db.collection('users').insertOne(user, {
-          w: 'majority',
-          wtimeout: 10000,
-          serializeFunctions: true,
-          forceServerObjectId: true
-        }
-      )
+      await db.collection('users').insertOne(user)
     }
 
     res.json(user)

@@ -17,14 +17,14 @@
   },
   "homepage": "https://github.com/rkamradt/blackbook-read-profile#readme",
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "dotenv": "^8.0.0",
-    "express": "^4.17.1",
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "http": "0.0.1-security",
-    "http-errors": "^1.8.0",
-    "mongodb": "^3.6.4",
-    "morgan": "^1.10.0",
+    "http-errors": "^2.0.1",
+    "mongodb": "^7.2.0",
+    "morgan": "^1.10.1",
     "nnode": "^0.3.3"
   }
 }
