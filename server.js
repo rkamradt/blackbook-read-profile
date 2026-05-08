@@ -2,12 +2,12 @@ import express from 'express'
 import bodyParser from 'body-parser'
 const MongoClient = require('mongodb').MongoClient
 import cors from 'cors'
-const OktaJwtVerifier = require('@okta/jwt-verifier')
+const { auth } = require('express-oauth2-jwt-bearer')
 
-const oktaJwtVerifier = new OktaJwtVerifier({
-  clientId: '0oag1oxllhj9N2SPV4x6',
-  issuer: 'https://dev-804011.okta.com/oauth2/default'
-});
+const authenticationRequired = auth({
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+  audience: process.env.AUTH0_AUDIENCE,
+})
 
 const MONGO_USER = process.env.MONGO_USER
 const MONGO_PASS = process.env.MONGO_PASS
@@ -16,31 +16,6 @@ const MONGO_PORT = process.env.MONGO_PORT || 27017
 
 const dbName = 'blackbook'
 const mongourl = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_SERVER}:${MONGO_PORT}`;
-/**
- * A simple middleware that asserts valid access tokens and sends 401 responses
- * if the token is not present or fails validation.  If the token is valid its
- * contents are attached to req.jwt
- */
-function authenticationRequired(req, res, next) {
-  const authHeader = req.headers.authorization || ''
-  const match = authHeader.match(/Bearer (.+)/)
-
-  if (!match) {
-    res.status(401)
-    return next('Unauthorized')
-  }
-
-  const accessToken = match[1];
-  const audience = 'api://default'
-  return oktaJwtVerifier.verifyAccessToken(accessToken, audience)
-    .then((jwt) => {
-      req.jwt = jwt
-      next()
-    })
-    .catch((err) => {
-      res.status(401).send(err.message)
-    })
-}
 
 const client = new MongoClient(mongourl, {
   useUnifiedTopology: true
@@ -52,7 +27,7 @@ async function getUser(req, res, next) {
   })
 
   try {
-    const email = req.jwt.claims.sub
+    const email = req.auth.payload.sub
     if(!email) {
       console.log('no user in request')
       return next()
