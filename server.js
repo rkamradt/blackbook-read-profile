@@ -2,12 +2,17 @@ import express from 'express'
 import bodyParser from 'body-parser'
 const MongoClient = require('mongodb').MongoClient
 import cors from 'cors'
-const { auth } = require('express-oauth2-jwt-bearer')
-
-const authenticationRequired = auth({
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  audience: process.env.AUTH0_AUDIENCE,
-})
+// JWT validation is handled by the api-gateway (Cloudflare tunnel).
+// The gateway sets X-User-ID to the token subject before forwarding.
+function authenticationRequired(req, res, next) {
+  const userId = req.headers['x-user-id']
+  if (!userId) {
+    res.status(401).send('Unauthorized')
+    return
+  }
+  req.userId = userId
+  next()
+}
 
 const MONGO_USER = process.env.MONGO_USER
 const MONGO_PASS = process.env.MONGO_PASS
@@ -27,7 +32,7 @@ async function getUser(req, res, next) {
   })
 
   try {
-    const email = req.auth.payload.sub
+    const email = req.userId
     if(!email) {
       console.log('no user in request')
       return next()
