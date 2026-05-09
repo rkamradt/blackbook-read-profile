@@ -1,6 +1,6 @@
-import express from 'express'
-const MongoClient = require('mongodb').MongoClient
-import cors from 'cors'
+const express = require('express')
+const { MongoClient } = require('mongodb')
+const cors = require('cors')
 
 // JWT validation is handled by the api-gateway (Cloudflare tunnel).
 // The gateway sets X-User-ID to the token subject before forwarding.
